@@ -1,4 +1,4 @@
-# rb_client
+# rb_admin
 
 ## Project setup
 ```
