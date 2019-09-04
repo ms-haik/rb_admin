@@ -45,11 +45,14 @@ const service = axios.create({
 service.interceptors.request.use(
   config => {
     // 在请求发送之前做一些处理
+    const token = util.cookies.get('token')
     if (config.from && config.from === 'mock') { // 针对mock数据
-      const token = util.cookies.get('token')
       config.headers['X-Token'] = token
       return config
     } else { // 通过api向后台请求的数据
+      if (token) {
+        config.headers['token'] = token
+      }
       // 根据请求方法，序列化传来的参数，根据后端需求是否序列化
       if (config.method.toLocaleLowerCase() === 'post' ||
         config.method.toLocaleLowerCase() === 'put' ||

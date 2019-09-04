@@ -2,7 +2,7 @@ import { Message, MessageBox } from 'element-ui'
 import util from '@/libs/util.js'
 import router from '@/router'
 import { AccountLogin } from '@api/sys.login'
-// const CryptoJS = require('crypto-js')
+const CryptoJS = require('crypto-js')
 export default {
   namespaced: true,
   actions: {
@@ -28,7 +28,7 @@ export default {
             // 如有必要 token 需要定时更新，默认保存一天
             if (res.uuid && res.token) {
               util.cookies.set('uuid', res.uuid)
-              util.cookies.set('token', res.token)
+              util.cookies.set('token', CryptoJS.MD5(res.token).toString().toLowerCase())
               // 设置 vuex 用户信息
               await dispatch('d2admin/user/set', {
                 name: res.name
