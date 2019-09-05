@@ -6,8 +6,7 @@ export default [
     icon: 'folder-o',
     children: [
       { path: '/article/create', title: '创建文章' },
-      { path: '/article/toberelease', title: '待发布' },
-      { path: '/article/released', title: '已发布' }
+      { path: '/article/articlelist', title: '文章列表' }
     ]
   }
 ]

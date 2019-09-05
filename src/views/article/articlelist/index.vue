@@ -3,7 +3,14 @@
     <template slot="header">待发布的文章</template>
     <el-row class="filter-area">
       <el-col :span="4">
-        <el-input v-model="filter.key" placeholder="搜索文章标题" suffix-icon="el-icon-search" @change="filterList"></el-input>
+        <el-select v-model="filter.status" clearable placeholder="请选择文章状态" @change="getdata()">
+          <el-option label="全部" :value="''"></el-option>
+          <el-option label="待发布" :value="2"></el-option>
+          <el-option label="已发布" :value="1"></el-option>
+        </el-select>
+      </el-col>
+      <el-col :span="4">
+        <el-input v-model="filter.title" placeholder="搜索文章标题" suffix-icon="el-icon-search" @change="getdata()"></el-input>
       </el-col>
     </el-row>
     <el-table :data="data" style="width:100%;margin-top:20px;">
@@ -14,7 +21,7 @@
       </el-table-column>
       <el-table-column label="封面" width="200" align="center">
         <template slot-scope="scope">
-          <img :src="scope.row.cover" class="cover-img">
+          <img v-if="scope.row.picture !== ''" :src="scope.row.picture" class="cover-img">
         </template>
       </el-table-column>
       <el-table-column label="标题" width="400" align="center">
@@ -24,17 +31,12 @@
       </el-table-column>
       <el-table-column label="作者" width="200" align="center">
         <template slot-scope="scope">
-          <span>{{ scope.row.authorName }}</span>
+          <span>{{ scope.row.author }}</span>
         </template>
       </el-table-column>
       <el-table-column label="创建时间" width="200" align="center">
         <template slot-scope="scope">
-          <span>{{ timeToStr(scope.row.created) }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column label="创建者" width="200" align="center">
-        <template slot-scope="scope">
-          <span>{{ scope.row.creatorName }}</span>
+          <span>{{ timeToStr(scope.row.createTime) }}</span>
         </template>
       </el-table-column>
       <el-table-column label="操作" min-width="300" align="center">
@@ -43,36 +45,17 @@
             icon="el-icon-edit"
             @click="handleEdit(scope.$index, scope.row)"
             class="to-edit-link">编辑</el-link>
-          <el-button
+          <el-button v-if="scope.row.status === 2"
             size="mini"
             type="primary"
             @click="handleRelease(scope.$index, scope.row)">发布</el-button>
-          <el-button
+          <el-button v-if="scope.row.status === 1"
             size="mini"
             type="primary"
-            @click="handleTimeRelease(scope.$index, scope.row)">定时发布</el-button>
-          <el-button
-            size="mini"
-            type="danger"
-            @click="handleDelete(scope.$index, scope.row)">删除</el-button>
+            @click="handleCancelRelease(scope.$index, scope.row)">撤回</el-button>
         </template>
       </el-table-column>
     </el-table>
-    <el-dialog
-      title="定时发布"
-      :visible.sync="dialogData.visible"
-      width="30%">
-      <el-date-picker
-        v-model="dialogData.releaseTime"
-        type="datetime"
-        size="large"
-        placeholder="选择发布日期时间">
-      </el-date-picker>
-      <span slot="footer" class="dialog-footer">
-        <el-button @click="dialogData.visible = false">取 消</el-button>
-        <el-button type="primary" @click="confirmTimeRelease">确 定</el-button>
-      </span>
-    </el-dialog>
     <template slot="footer">
       <el-pagination
         background
@@ -87,14 +70,14 @@
 </template>
 
 <script>
-import { searchArticle, updateArticle } from '@/api/article/index.js'
+import { searchArticle, updateArticleStatus } from '@/api/article/index.js'
 export default {
-  name: 'articletoberelease',
+  name: 'articlelist',
   data () {
     return {
       data: [],
       filter: {
-        key: ''
+        status: ''
       },
       currentPage: 1,
       pageSize: 10,
@@ -113,11 +96,9 @@ export default {
       searchArticle({
         page: page,
         size: this.pageSize,
-        visible: 0,
-        cache: 0,
         ...this.filter
       }).then((res) => {
-        this.data = res.articleList
+        this.data = res.list
         if (page === 0) {
           this.totalNum = res.total
         }
@@ -130,23 +111,21 @@ export default {
       this.$router.push({ name: 'articleedit', params: { id: row.id } })
     },
     handleRelease (index, row) {
-      // 立即发布
       this.$confirm('确认发布该文章么?', '提示', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
       }).then(() => {
-        // releaseArticle({
-        //   articleId: row.id,
-        //   visible: 2,
-        //   releaseTime: 0
-        // }).then((res) => {
-        //   this.data.splice(index, 1)
-        //   this.$message({
-        //     type: 'success',
-        //     message: '发布成功!'
-        //   })
-        // })
+        updateArticleStatus({
+          id: row.id,
+          status: 1
+        }).then((res) => {
+          this.data.splice(index, 1)
+          this.$message({
+            type: 'success',
+            message: '发布成功!'
+          })
+        })
       }).catch(() => {
         this.$message({
           type: 'info',
@@ -154,50 +133,26 @@ export default {
         })
       })
     },
-    handleTimeRelease (index, row) {
-      // 定时发布
-      this.dialogData = {
-        index: index,
-        articleId: row.id,
-        visible: true,
-        releaseTime: ''
-      }
-    },
-    confirmTimeRelease () {
-      if (this.dialogData.releaseTime === '') {
-        this.$message.warning('定时发布必须选择发布日期')
-        return false
-      }
-      // releaseArticle({
-      //   articleId: this.dialogData.articleId,
-      //   releaseTime: parseInt(new Date(this.dialogData.releaseTime).getTime() / 1000)
-      // }).then((res) => {
-      //   this.$message.success('定时发布成功')
-      //   this.data.splice(this.dialogData.index, 1)
-      //   this.dialogData = {}
-      // })
-    },
-    handleDelete (index, row) {
-      this.$confirm('此操作将删除该文章, 是否继续?', '提示', {
+    handleCancelRelease (index, row) {
+      this.$confirm('确认撤回该文章么?', '提示', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
       }).then(() => {
-        updateArticle({
+        updateArticleStatus({
           id: row.id,
-          visible: -2,
-          version: parseInt(new Date().getTime() / 1000)
-        }).then(() => {
+          status: 2
+        }).then((res) => {
           this.data.splice(index, 1)
           this.$message({
             type: 'success',
-            message: '删除成功!'
+            message: '撤回成功!'
           })
         })
       }).catch(() => {
         this.$message({
           type: 'info',
-          message: '已取消删除'
+          message: '操作失败'
         })
       })
     },

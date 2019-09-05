@@ -42,24 +42,14 @@ const frameIn = [
         component: _import('article/edit')
       },
       {
-        path: 'article/toberelease',
-        name: 'articletoberelease',
+        path: 'article/articlelist',
+        name: 'articlelist',
         meta: {
           title: '待发布',
           cache: true,
           auth: true
         },
-        component: _import('article/toBeRelease')
-      },
-      {
-        path: 'article/released',
-        name: 'articlereleased',
-        meta: {
-          title: '已发布',
-          cache: true,
-          auth: true
-        },
-        component: _import('article/released')
+        component: _import('article/articlelist')
       },
       // 系统 前端日志
       {
