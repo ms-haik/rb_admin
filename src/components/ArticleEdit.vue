@@ -6,19 +6,35 @@
           <div class="article-input">
             <el-input v-model="title" placeholder="请输入文章标题(必填)"><template slot="prepend">标题</template></el-input>
           </div>
+          <div class="article-input">
+            <el-input v-model="author" placeholder="请输入作者"><template slot="prepend">作者</template></el-input>
+          </div>
+          <div class="article-input">
+            <el-form @submit.native.prevent label-position="left">
+              <el-form-item label="选择文章标签" label-width="100px">
+                <el-checkbox-group v-model="labels">
+                  <el-checkbox v-for="(item, index) in allLabels" :key="index" :label="'' + item.id" name="label">{{ item.name }}</el-checkbox>
+                </el-checkbox-group>
+              </el-form-item>
+            </el-form>
+          </div>
           <froala :tag="'div'" :config="config" v-model="text"></froala>
         </div>
       </el-col>
       <el-col :span="12">
         <div class="grid-content">
-          <articlePreview :title="title" :author="author" :text="text" />
+          <el-row style="margin-bottom: 20px;">
+            <el-col :span="4" :offset="2"><span>文章封面图</span></el-col>
+            <el-col :span="6">
+              <Cropper ref="articlepicture" :radio="0.82" :initUrl="picture" :callback="pictureCallBack"/>
+            </el-col>
+          </el-row>
+          <articlePreview :text="text" />
         </div>
       </el-col>
     </el-row>
     <template slot="footer">
       <el-button type="primary" @click="save()">保存</el-button>
-      <el-button v-if="visible === 2" type="primary" @click="cancelRelease()">撤回移至待发布</el-button>
-      <el-button v-else type="primary" @click="release()">发布</el-button>
     </template>
   </d2-container>
 </template>
@@ -26,29 +42,24 @@
 <script>
 import jquery from 'jquery'
 import articlePreview from '@/components/ArticlePreview.vue'
-// import Cropper from '@/components/Cropper.vue'
-import { createArticle, getArticle, updateArticle, updateArticleStatus } from '@/api/article/index.js'
+import Cropper from '@/components/Cropper.vue'
+import { createArticle, getArticle, updateArticle, getLabels } from '@/api/article/index.js'
 export default {
-  props: {
-    id: Number
-  },
+  props: ['id'],
   data () {
     return {
       articleId: '',
-      cover: '',
       title: '',
-      authorName: '',
-      authorId: '',
       author: '',
       text: '',
-      goodsName: '',
-      goodsId: '',
-      visible: 0,
+      picture: '',
+      labels: [],
+      allLabels: [],
       config: {
         editorClass: 'richtext',
         autofocus: true,
         widthMax: 744,
-        height: 600,
+        heightMin: 600,
         enter: jquery.FroalaEditor.ENTER_P,
         toolbarButtons: [
           'bold',
@@ -113,6 +124,7 @@ export default {
   },
   mounted () {
     this.getData()
+    this.getLabelsList()
   },
   watch: {
     id: 'getData'
@@ -124,44 +136,35 @@ export default {
         getArticle({
           id: this.articleId
         }).then((res) => {
-          this.title = res.article.title
-          this.authorId = res.article.authorId
-          this.goodsId = res.article.itemId
-          this.text = res.article.content
-          this.visible = res.article.visible
+          this.title = res.title
+          this.author = res.author
+          this.text = res.content
+          this.picture = res.picture
+          this.$refs.articlepicture.imgurl = res.picture
+          if (res.labels && res.labels !== '') {
+            this.labels = res.labels.split(',')
+          }
         })
       }
     },
-    searchAuthor (queryString, cb) {
-      // searchUser({
-      //   nickname: queryString
-      // }).then((res) => {
-      //   let results = []
-      //   res.forEach(element => {
-      //     element.value = element.nickname
-      //     results.push(element)
-      //   })
-      //   cb(results)
-      // })
+    pictureCallBack () {
+      this.picture = this.$refs.articlepicture.imgurl
     },
-    handleSelectAuthor (item) {
-      this.authorName = item.nickname
-      this.authorId = item.id
-      this.author = item.nickname
-    },
-    coverCallBack () {
-      this.cover = this.$refs.articlecover.imgurl
+    getLabelsList () {
+      getLabels({ page: 0, size: 1000 })
+        .then((res) => {
+          this.allLabels = res
+        })
     },
     save () {
-      if (this.id) { // 修改更新
+      if (this.articleId) { // 修改更新
         let postArgs = {
           id: this.articleId,
           title: this.title,
-          itemId: this.goodsId,
-          authorId: this.authorId,
+          author: this.author,
           content: this.text,
-          cover: this.cover,
-          version: parseInt(new Date().getTime() / 1000)
+          picture: this.picture,
+          labels: this.labels.length > 0 ? this.labels.join(',') : ''
         }
         updateArticle(postArgs).then((res) => {
           this.$message({
@@ -174,14 +177,13 @@ export default {
       } else { // 创建文章
         let postArgs = {
           title: this.title,
-          itemId: this.goodsId,
-          authorId: this.authorId,
+          author: this.author,
           content: this.text,
-          cover: this.cover,
-          visible: 0
+          picture: this.picture,
+          labels: this.labels.length > 0 ? this.labels.join(',') : ''
         }
         createArticle(postArgs).then((res) => {
-          this.articleId = res.article.id
+          this.articleId = res.id
           this.$message({
             showClose: true,
             message: '保存成功',
@@ -190,77 +192,10 @@ export default {
           })
         })
       }
-    },
-    release () {
-      this.$confirm('文章将被发布, 是否继续?', '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }).then(() => {
-        if (this.articleId && this.articleId !== '') {
-          // releaseArticle({
-          //   articleId: this.articleId,
-          //   releaseTime: 0,
-          //   visible: 2
-          // }).then((res) => {
-          //   this.visible = 2
-          //   this.$message({
-          //     type: 'success',
-          //     message: '发布成功!'
-          //   })
-          // })
-        } else {
-          let postArgs = {
-            title: this.title,
-            itemId: this.goodsId,
-            authorId: this.authorId,
-            content: this.text,
-            cover: this.cover,
-            visible: 2
-          }
-          createArticle(postArgs).then((res) => {
-            this.articleId = res.article.id
-            this.visible = 2
-            this.$message({
-              showClose: true,
-              message: '发布成功',
-              type: 'success',
-              center: true
-            })
-          })
-        }
-      }).catch(() => {
-        this.$message({
-          type: 'info',
-          message: '已取消发布'
-        })
-      })
-    },
-    cancelRelease () {
-      this.$confirm('文章将移至待发布状态, 是否继续?', '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }).then(() => {
-        // cancelReleaseArticle({
-        //   articleId: this.articleId
-        // }).then((res) => {
-        //   this.visible = 0
-        //   this.$message({
-        //     type: 'success',
-        //     message: '文章已下线，移至待发布!'
-        //   })
-        // })
-      }).catch(() => {
-        this.$message({
-          type: 'info',
-          message: '操作失败'
-        })
-      })
     }
   },
   components: {
-    // Cropper,
+    Cropper,
     articlePreview
   }
 }
@@ -268,6 +203,10 @@ export default {
 
 <style lang="scss">
 .article-edit {
+  .el-upload-dragger {
+    width: 200px;
+    height: 243px;
+  }
   .avatar-uploader .el-upload {
     border: 1px dashed #d9d9d9;
     border-radius: 6px;

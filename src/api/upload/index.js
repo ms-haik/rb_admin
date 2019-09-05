@@ -10,7 +10,7 @@ export function UploadByFile (data) {
 
 export function UploadImg (data) {
   return request({
-    url: '/file/upload/img/common',
+    url: '/file/upload',
     method: 'post',
     data
   })

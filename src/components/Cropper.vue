@@ -5,7 +5,7 @@
       <img v-if="imgurl.length > 0" :src="imgurl">
       <i class="el-icon-upload"></i>
       <div class="el-upload__text">点击上传图片</div>
-      <div class="el-upload__tip">支持绝大多数图片格式，单张图片最大支持5MB</div>
+      <div class="el-upload__tip">支持png/jpg格式，最大支持5MB</div>
     </el-upload>
     <el-dialog title="图片剪裁" :visible.sync="dialogVisible" :close-on-click-modal="false" append-to-body>
       <div class="cropper-content">
@@ -106,7 +106,7 @@ export default {
             base64: base64
           }).then((res) => {
             This.dialogVisible = false
-            This.imgurl = res.urls[0]
+            This.imgurl = res.link
             This.loading = false
             if (This.callback) {
               This.callback()
