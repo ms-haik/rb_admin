@@ -1,6 +1,5 @@
 <template>
   <div class="article-preview">
-    <div class="title">{{ title }}</div>
     <div class="text" v-html="text"></div>
   </div>
 </template>
@@ -31,7 +30,7 @@ export default {
     font-size: 16px;
     color: #AAAAAA;
     p {
-      margin-top: 20px;
+      margin-bottom: 20px;
       line-height: 1.7;
     }
     img {
