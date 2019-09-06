@@ -20,7 +20,7 @@ module.exports = {
     port: 8080,
     proxy: {
       '/api': {
-        target: 'http://rnbtcg.com/', // 设置反向代理
+        target: 'http://www.rnbtcg.com/', // 设置反向代理
         secure: false,
         // ws: true,
         changeOrigin: true,
