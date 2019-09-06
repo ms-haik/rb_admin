@@ -10,7 +10,15 @@
         </el-select>
       </el-col>
       <el-col :span="4">
-        <el-input v-model="filter.title" placeholder="搜索文章标题" suffix-icon="el-icon-search" @change="getdata()"></el-input>
+        <el-select v-model="filter.labels" clearable placeholder="请选择文章标签" @change="getdata()">
+          <el-option label="全部" :value="''"></el-option>
+          <el-option v-for="(item, index) in allLabels" :key="index" :label="item.name" :value="item.id"></el-option>
+        </el-select>
+      </el-col>
+      <el-col :span="4">
+        <el-input v-model="filter.title" placeholder="搜索文章标题" @change="getdata()">
+          <el-button slot="append" icon="el-icon-search" @click="getdata(0)"></el-button>
+        </el-input>
       </el-col>
     </el-row>
     <el-table :data="data" style="width:100%;margin-top:20px;">
@@ -70,7 +78,7 @@
 </template>
 
 <script>
-import { searchArticle, updateArticleStatus } from '@/api/article/index.js'
+import { searchArticle, updateArticleStatus, getLabels } from '@/api/article/index.js'
 export default {
   name: 'articlelist',
   data () {
@@ -79,6 +87,7 @@ export default {
       filter: {
         status: ''
       },
+      allLabels: [],
       currentPage: 1,
       pageSize: 10,
       totalNum: 0,
@@ -87,6 +96,7 @@ export default {
   },
   mounted () {
     this.getdata()
+    this.getLabelsList()
   },
   methods: {
     getdata (page) {
@@ -104,8 +114,11 @@ export default {
         }
       })
     },
-    filterList () {
-      this.getdata(0)
+    getLabelsList () {
+      getLabels({ page: 0, size: 1000 })
+        .then((res) => {
+          this.allLabels = res
+        })
     },
     handleEdit (index, row) {
       this.$router.push({ name: 'articleedit', params: { id: row.id } })
