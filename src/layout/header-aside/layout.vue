@@ -18,7 +18,7 @@
         <div class="logo-group" :style="{width: asideCollapse ? asideWidthCollapse : asideWidth}" flex-box="0">
           <!-- <img v-if="asideCollapse" :src="`${$baseUrl}image/theme/${themeActiveSetting.name}/logo/icon-only.png`">
           <img v-else :src="`${$baseUrl}image/theme/${themeActiveSetting.name}/logo/all.png`"> -->
-          <img src="https://microfun.oss-cn-beijing.aliyuncs.com/img/logo_small.png">
+          <img src="http://www.rnbtcg.com/static/img/home/logo.png">
         </div>
         <div class="toggle-aside-btn" @click="handleToggleAside" flex-box="0">
           <d2-icon name="bars"/>
