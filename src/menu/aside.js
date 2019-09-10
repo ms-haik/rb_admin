@@ -8,5 +8,12 @@ export default [
       { path: '/article/create', title: '创建文章' },
       { path: '/article/articlelist', title: '文章列表' }
     ]
+  },
+  {
+    title: '媒体资源管理',
+    icon: 'folder-o',
+    children: [
+      { path: '/media/medialist', title: '媒体资源管理' }
+    ]
   }
 ]

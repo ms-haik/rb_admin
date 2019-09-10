@@ -46,10 +46,20 @@ const frameIn = [
         name: 'articlelist',
         meta: {
           title: '待发布',
-          cache: true,
+          // cache: true,
           auth: true
         },
         component: _import('article/articlelist')
+      },
+      {
+        path: 'media/medialist',
+        name: 'medialist',
+        meta: {
+          title: '媒体资源管理',
+          // cache: true,
+          auth: true
+        },
+        component: _import('media/medialist')
       },
       // 系统 前端日志
       {
