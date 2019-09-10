@@ -1,7 +1,7 @@
 <template>
   <d2-container class="page">
     <div class="welcome">
-      <div><img src="http://admin.rnbtcg.com/img/logo.png"></div>
+      <div><img src="http://admin.rnbtcg.com/logo.png"></div>
       <div>欢迎使用红与蓝管理端</div>
       <div><a href="http://www.rnbtcg.com" target="_blank">前往红与蓝网站</a></div>
     </div>
