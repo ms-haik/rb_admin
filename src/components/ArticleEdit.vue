@@ -236,6 +236,13 @@ export default {
   .richtext {
     margin-top: 10px;
     font-size: 16px;
+    .fr-element {
+      >p {
+        margin-top: 0;
+        margin-bottom: 20px;
+        line-height: 1.7
+      }
+    }
   }
   a[href="https://www.froala.com/wysiwyg-editor?k=u"] {
     background: white !important;
