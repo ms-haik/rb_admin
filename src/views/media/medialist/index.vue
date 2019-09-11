@@ -62,20 +62,23 @@
           <el-radio :label="'cn'" v-model="dialogData.labels" name="language">中文</el-radio>
           <el-radio :label="'en'" v-model="dialogData.labels" name="language">英文</el-radio>
         </el-form-item>
-        <el-form-item label="上传资源文件">
+        <el-form-item v-if="dialogData.type === 'video'" label="视频链接">
+          <el-input v-model="dialogData.video" placeholder="请输入视频链接"></el-input>
+        </el-form-item>
+        <el-form-item v-if="dialogData.type !== 'video'" label="上传资源文件">
           <el-upload
             class="upload-media-file"
             :action="fileUploadAction"
-            :on-success="dialogData.handleUploadSuccess"
+            :on-success="handleUploadSuccess"
             :multiple="false"
             :limit="1"
-            :on-exceed="dialogData.handleExceed"
+            :on-exceed="handleExceed"
             :file-list="dialogData.fileList">
             <el-button size="small" type="primary">点击上传</el-button>
           </el-upload>
         </el-form-item>
         <el-form-item v-if="dialogData.type === 'video'" label="上传视频封面">
-          <Cropper ref="videoCover" :radio="1.86" :initUrl="''" :callback="dialogData.coverCallBack"/>
+          <Cropper ref="videoCover" :radio="1.86" :initUrl="''" :callback="coverCallBack"/>
         </el-form-item>
         <el-form-item label="备注">
           <el-input v-model="dialogData.remark" type="textarea" rows="2" resize="none" placeholder="请输入资源备注">
@@ -84,7 +87,7 @@
       </el-form>
       <span slot="footer" class="dialog-footer">
         <el-button @click="dialogData.visible = false">取 消</el-button>
-        <el-button type="primary" @click="dialogData.confirmCreate()">确 定</el-button>
+        <el-button type="primary" @click="confirmCreate()">确 定</el-button>
       </span>
     </el-dialog>
   </d2-container>
@@ -134,58 +137,64 @@ export default {
       })
     },
     handleCreate () {
-      this.dialogData.handleUploadSuccess = (response, file, fileList) => {
-        this.dialogData.url = response.link
+      let obj = {
+        type: 'video',
+        visible: true,
+        labels: '',
+        remark: ''
       }
-
-      this.dialogData.handleExceed = (files, filelist) => {
-        this.$message.warning('只能上传单个文件')
+      this.dialogData = JSON.parse(JSON.stringify(obj))
+    },
+    handleUploadSuccess: function (response, file, fileList) {
+      this.dialogData.url = response.link
+    },
+    handleExceed: function (files, filelist) {
+      this.$message.warning('只能上传单个文件')
+    },
+    coverCallBack: function () {
+      this.dialogData.videoCover = this.$refs.videoCover.imgurl
+    },
+    confirmCreate: function () {
+      if (this.dialogData.labels === '' || this.dialogData.labels === undefined) {
+        this.$message.warning('请选择语言')
+        return false
       }
-
-      this.dialogData.coverCallBack = () => {
-        this.dialogData.videoCover = this.$refs.videoCover.imgurl
+      if (this.dialogData.type !== 'video' && (this.dialogData.url === '' ||
+        this.dialogData.url === undefined)) {
+        this.$message.warning('请上传资源文件')
+        return false
       }
-
-      this.dialogData.confirmCreate = () => {
-        if (this.dialogData.labels === '' || this.dialogData.labels === undefined) {
-          this.$message.warning('请选择语言')
-          return false
-        }
-        if (this.dialogData.url === '' || this.dialogData.url === undefined) {
-          this.$message.warning('请上传资源文件')
-          return false
-        }
-        if (this.dialogData.remark === '') {
-          this.$message.warning('请填写资源备注')
-          return false
-        }
-        if (this.dialogData.type === 'video' && this.dialogData.videoCover === '') {
-          this.$message.warning('请上传视频封面')
-          return false
-        }
-        let postArgs = {
-          type: this.dialogData.type,
-          remark: this.dialogData.remark,
-          labels: this.dialogData.labels
-        }
-        switch (this.dialogData.type) {
-          case 'video':
-            postArgs.video = this.dialogData.url
-            postArgs.url = this.dialogData.videoCover
-            break
-          default:
-            postArgs.url = this.dialogData.url
-            break
-        }
-        createResource(postArgs).then((res) => {
-          this.resourceList.unshift(res)
-          this.dialogData = { visible: false }
-        })
+      if (this.dialogData.remark === '') {
+        this.$message.warning('请填写资源备注')
+        return false
       }
-
-      this.dialogData.type = 'video'
-
-      this.dialogData.visible = true
+      if (this.dialogData.type === 'video' && this.dialogData.video === '') {
+        this.$message.warning('请填写视频链接')
+        return false
+      }
+      if (this.dialogData.type === 'video' && (this.dialogData.videoCover === '' ||
+        this.dialogData.videoCover === undefined)) {
+        this.$message.warning('请上传视频封面')
+        return false
+      }
+      let postArgs = {
+        type: this.dialogData.type,
+        remark: this.dialogData.remark,
+        labels: this.dialogData.labels
+      }
+      switch (this.dialogData.type) {
+        case 'video':
+          postArgs.video = this.dialogData.video
+          postArgs.url = this.dialogData.videoCover
+          break
+        default:
+          postArgs.url = this.dialogData.url
+          break
+      }
+      createResource(postArgs).then((res) => {
+        this.resourceList.unshift(res)
+        this.dialogData = { visible: false }
+      })
     },
     handleDelete (index, row) {
       this.$confirm('此操作将删除该资源, 是否继续?', '提示', {
