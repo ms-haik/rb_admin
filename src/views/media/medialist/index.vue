@@ -196,7 +196,7 @@ export default {
         deleteResource({
           id: row.id
         }).then(() => {
-          this.data.splice(index, 1)
+          this.resourceList.splice(index, 1)
           this.$message({
             type: 'success',
             message: '删除成功!'
