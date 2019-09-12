@@ -10,25 +10,39 @@
             <el-input v-model="author" placeholder="请输入作者"><template slot="prepend">作者</template></el-input>
           </div>
           <div class="article-input">
-            <el-form @submit.native.prevent label-position="left">
-              <el-form-item label="选择文章标签" label-width="100px">
-                <el-checkbox-group v-model="labels">
-                  <el-checkbox v-for="(item, index) in allLabels" :key="index" :label="'' + item.id" name="label">{{ item.name }}</el-checkbox>
-                </el-checkbox-group>
-              </el-form-item>
-            </el-form>
+            <el-input v-model="video" placeholder="第三方视频链接"><template slot="prepend">视频链接</template></el-input>
+          </div>
+          <div class="article-input">
+            <el-input v-model="code" type="textarea" placeholder="请输入可复制字符串">
+              <template slot="prepend">可复制字符串</template>
+            </el-input>
+          </div>
+          <div class="article-input">
+            <el-row style="margin-bottom: 20px;">
+              <el-col :span="4" :offset="2"><span>文章封面图</span></el-col>
+              <el-col :span="6">
+                <Cropper ref="articlepicture" :radio="1.3" :initUrl="picture" :callback="pictureCallBack"/>
+              </el-col>
+            </el-row>
           </div>
           <froala :tag="'div'" :config="config" v-model="text"></froala>
         </div>
       </el-col>
       <el-col :span="12">
         <div class="grid-content">
-          <el-row style="margin-bottom: 20px;">
-            <el-col :span="4" :offset="2"><span>文章封面图</span></el-col>
-            <el-col :span="6">
-              <Cropper ref="articlepicture" :radio="0.82" :initUrl="picture" :callback="pictureCallBack"/>
-            </el-col>
-          </el-row>
+          <div class="article-input">
+            <el-row>
+              <el-col :offset="1">
+                <el-form @submit.native.prevent label-position="top">
+                  <el-form-item label="选择文章标签" label-width="100px">
+                    <el-checkbox-group v-model="labels">
+                      <el-checkbox v-for="(item, index) in allLabels" :key="index" :label="'' + item.id" name="label">{{ item.name }}</el-checkbox>
+                    </el-checkbox-group>
+                  </el-form-item>
+                </el-form>
+              </el-col>
+            </el-row>
+          </div>
           <articlePreview :text="text" />
         </div>
       </el-col>
@@ -53,6 +67,8 @@ export default {
       author: '',
       text: '',
       picture: '',
+      code: '',
+      video: '',
       labels: [],
       allLabels: [],
       config: {
@@ -140,6 +156,8 @@ export default {
           this.author = res.author
           this.text = res.content
           this.picture = res.picture
+          this.code = res.code
+          this.video = res.video
           this.$refs.articlepicture.imgurl = res.picture
           if (res.labels && res.labels !== '') {
             this.labels = res.labels.split(',')
@@ -164,6 +182,8 @@ export default {
           author: this.author,
           content: this.text,
           picture: this.picture,
+          code: this.code,
+          video: this.video,
           labels: this.labels.length > 0 ? this.labels.join(',') : ''
         }
         updateArticle(postArgs).then((res) => {
@@ -180,6 +200,8 @@ export default {
           author: this.author,
           content: this.text,
           picture: this.picture,
+          code: this.code,
+          video: this.video,
           labels: this.labels.length > 0 ? this.labels.join(',') : ''
         }
         createArticle(postArgs).then((res) => {
@@ -204,8 +226,8 @@ export default {
 <style lang="scss">
 .article-edit {
   .el-upload-dragger {
-    width: 200px;
-    height: 243px;
+    width: 300px;
+    height: 230px;
   }
   .avatar-uploader .el-upload {
     border: 1px dashed #d9d9d9;
