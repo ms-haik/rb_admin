@@ -32,6 +32,17 @@
         <div class="grid-content">
           <div class="article-input">
             <el-row>
+              <el-col :offset="1" :span="12">
+                <el-form @submit.native.prevent label-position="left">
+                  <el-form-item label="文章权重" label-width="80px">
+                    <el-input v-model="weight" placeholder="请填写数字(默认权重为10)"></el-input>
+                  </el-form-item>
+                </el-form>
+              </el-col>
+            </el-row>
+          </div>
+          <div class="article-input">
+            <el-row>
               <el-col :offset="1">
                 <el-form @submit.native.prevent label-position="top">
                   <el-form-item label="选择文章标签" label-width="100px">
@@ -69,6 +80,7 @@ export default {
       picture: '',
       code: '',
       video: '',
+      weight: 10,
       labels: [],
       allLabels: [],
       config: {
@@ -159,6 +171,7 @@ export default {
           this.code = res.code
           this.video = res.video
           this.$refs.articlepicture.imgurl = res.picture
+          this.weight = res.weight || 10
           if (res.labels && res.labels !== '') {
             this.labels = res.labels.split(',')
           }
@@ -184,6 +197,7 @@ export default {
           picture: this.picture,
           code: this.code,
           video: this.video,
+          weight: this.weight,
           labels: this.labels.length > 0 ? this.labels.join(',') : ''
         }
         updateArticle(postArgs).then((res) => {
@@ -202,6 +216,7 @@ export default {
           picture: this.picture,
           code: this.code,
           video: this.video,
+          weight: this.weight,
           labels: this.labels.length > 0 ? this.labels.join(',') : ''
         }
         createArticle(postArgs).then((res) => {
