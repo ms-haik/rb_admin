@@ -190,8 +190,8 @@ export default {
 
 <style lang="scss" scoped>
   .cover-img {
-    width: 60%;
-    height: 130px;
+    width: 180px;
+    height: 138px;
     border-radius: 5px;
   }
   .to-edit-link {
